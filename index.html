@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Încarcă fotografii și videoclipuri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EBEFF2; --card:#FFFFFF; --ink:#17212B; --muted:#5A6672; --line:#CFD6DD;
+  --accent:#24594A; --accent-soft:#E3EEEA; --ok:#2B7A4B; --err:#B03A2E;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.55 var(--sans);
+  padding:max(1.25rem,env(safe-area-inset-top)) 1.25rem max(2rem,env(safe-area-inset-bottom))}
+main{max-width:34rem;margin:0 auto}
+h1{font:600 clamp(2.3rem,9vw,3.4rem)/1.05 var(--serif);letter-spacing:-.02em;margin:2rem 0 .9rem}
+.lead{color:var(--muted);margin:0 0 1.75rem;max-width:30rem}
+.zone{background:var(--card);border:2px dashed var(--line);border-radius:1.25rem;padding:1.75rem 1.25rem;
+  text-align:center;transition:border-color .15s,background .15s}
+.zone.over{border-color:var(--accent);background:var(--accent-soft)}
+.pick{display:block;width:100%;min-height:3.75rem;border:0;border-radius:1rem;background:var(--accent);color:#fff;
+  font:700 1.05rem var(--sans);padding:1rem 1.25rem;cursor:pointer}
+.pick:active{transform:scale(.99)}
+.drop-hint{display:none;margin:.9rem 0 0;color:var(--muted);font-size:.95rem}
+@media (hover:hover) and (pointer:fine){.drop-hint{display:block}}
+.hint{margin:.9rem 0 0;color:var(--muted);font-size:.85rem}
+button:focus-visible,input:focus-visible{outline:3px solid #7DB3A3;outline-offset:2px}
+.notice{margin:1rem 0 0;padding:.8rem 1rem;border-radius:.8rem;background:#F8E9E6;color:#7A271D;font-size:.92rem}
+.notice p{margin:.15rem 0}
+ul{list-style:none;margin:1.25rem 0 0;padding:0;display:grid;gap:.6rem}
+.row{background:var(--card);border-radius:1rem;padding:.85rem 1rem;display:grid;grid-template-columns:1fr auto;gap:.15rem .75rem;align-items:center}
+.name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{grid-column:1;color:var(--muted);font-size:.85rem}
+.meta.err{color:var(--err)} .meta.ok{color:var(--ok);font-weight:500}
+.x{grid-row:1/3;grid-column:2;width:2.75rem;height:2.75rem;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:1.5rem;cursor:pointer}
+.x:hover{background:#EEF1F4}.x:disabled{opacity:.3;cursor:default}
+.retry{grid-column:2;grid-row:1/3}
+.bar{grid-column:1/3;height:.4rem;border-radius:1rem;background:#E5EAEE;overflow:hidden;margin-top:.5rem;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.row.up .bar{display:block}.row.done .bar i{background:var(--ok)}
+.go{display:block;width:100%;margin-top:1.25rem;min-height:3.5rem;border:2px solid var(--ink);border-radius:1rem;background:var(--ink);
+  color:#fff;font:700 1.05rem var(--sans);cursor:pointer}
+.go:disabled{opacity:.35;cursor:default}
+.keep{margin:.75rem 0 0;text-align:center;color:var(--muted);font-size:.85rem}
+.thanks{margin-top:1.25rem;background:var(--card);border-radius:1.25rem;padding:2rem 1.5rem;text-align:center}
+.thanks h2{font:600 1.9rem/1.15 var(--serif);margin:.4rem 0 .5rem}
+.thanks p{margin:0 0 1.25rem;color:var(--muted)}
+.tick{width:4rem;height:4rem;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto}
+.tick svg{width:2rem;height:2rem;stroke:#fff;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .1s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.link{border:0;background:none;color:var(--accent);font:700 1rem var(--sans);text-decoration:underline;cursor:pointer;padding:.5rem}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Se încarcă…</h1>
+  <p class="lead" id="msg"></p>
+
+  <section id="app" hidden>
+    <div class="zone" id="zone">
+      <button class="pick" id="pick" type="button">Selectează fotografii și videoclipuri</button>
+      <p class="drop-hint">sau trage fișierele aici</p>
+      <p class="hint" id="hint"></p>
+      <input id="file" type="file" multiple hidden>
+    </div>
+
+    <div class="notice" id="notice" role="alert" hidden></div>
+    <ul id="list" aria-live="polite"></ul>
+    <button class="go" id="go" type="button" disabled>Încarcă fișierele</button>
+    <p class="keep" id="keep" hidden>Ține pagina deschisă până se termină încărcarea.</p>
+
+    <div class="thanks" id="thanks" hidden>
+      <div class="tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 id="thanksTitle">Mulțumim!</h2>
+      <p id="thanksText"></p>
+      <button class="link" id="more" type="button">Încarcă alte fișiere</button>
+    </div>
+  </section>
+
+  <p class="lead" id="fatal" role="alert" hidden></p>
+</main>
+
+<script>
+"use strict";
+/* ======= SINGURA SETARE DIN ACEST FIȘIER: URL-ul aplicației web Apps Script ======= */
+const API_URL = https://script.google.com/macros/s/AKfycby6mCTTHYhCYzkTAEJwyutyxLYs9SR4S7In1uyo_Gj9JUOcXL5U6aQ-PCqC-tR-ZqTb/exec;
+/* =================================================================================== */
+
+const CHUNK = 8 * 1024 * 1024;               // multiplu de 256 KB, cerință Google Drive
+const EVENT = new URLSearchParams(location.search).get("e") || "";
+const $ = s => document.querySelector(s);
+const el = {zone:$("#zone"), pick:$("#pick"), file:$("#file"), list:$("#list"), go:$("#go"), notice:$("#notice"),
+  keep:$("#keep"), thanks:$("#thanks"), app:$("#app"), hint:$("#hint")};
+let cfg = null, items = [], busy = false, nextId = 1, wakeLock = null;
+
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const extOf = n => (n.split(".").pop() || "").toLowerCase();
+const fmt = b => b >= 1073741824 ? (b / 1073741824).toFixed(2) + " GB"
+  : b >= 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+
+/* ---------- comunicare cu Apps Script (text/plain evită preflight CORS) ---------- */
+async function api(action, data) {
+  const r = await fetch(API_URL, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(Object.assign({action, event: EVENT}, data || {}))
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "Eroare de server.");
+  return j;
+}
+
+function fatal(text) {
+  $("#title").textContent = "Linkul nu funcționează";
+  $("#msg").textContent = "";
+  $("#fatal").textContent = text; $("#fatal").hidden = false;
+}
+
+async function boot() {
+  if (API_URL.includes("PUNE_AICI")) return fatal("Pagina nu este configurată: lipsește URL-ul Apps Script.");
+  if (!EVENT) return fatal("Linkul este incomplet. Cere organizatorului un link nou.");
+  try { cfg = (await api("config")).config; }
+  catch (e) { return fatal(e.message || "Nu m-am putut conecta. Verifică internetul și reîncarcă pagina."); }
+  $("#title").textContent = cfg.title; document.title = cfg.title; $("#msg").textContent = cfg.message;
+  el.file.accept = cfg.extensions.map(e => "." + e).join(",") + ",image/heic,video/quicktime";
+  el.hint.textContent = "Maximum " + fmt(cfg.maxBytes) + " per fișier. Formate: " +
+    cfg.extensions.map(e => e.toUpperCase()).join(", ") + ".";
+  el.app.hidden = false;
+}
+
+/* ---------- selectarea fișierelor ---------- */
+function addFiles(list) {
+  const bad = [];
+  for (const f of list) {
+    if (!cfg.extensions.includes(extOf(f.name))) { bad.push(f.name + ": format neacceptat"); continue; }
+    if (!f.size) { bad.push(f.name + ": fișier gol"); continue; }
+    if (f.size > cfg.maxBytes) { bad.push(f.name + ": depășește " + fmt(cfg.maxBytes)); continue; }
+    if (items.some(i => i.file.name === f.name && i.file.size === f.size && i.file.lastModified === f.lastModified)) continue;
+    const it = {id: nextId++, file: f, state: "queued", pct: 0, err: ""};
+    it.row = makeRow(it); items.push(it); el.list.appendChild(it.row); setRow(it);
+  }
+  el.notice.hidden = !bad.length;
+  el.notice.replaceChildren(...bad.map(t => Object.assign(document.createElement("p"), {textContent: t})));
+  el.thanks.hidden = true; sync();
+}
+
+function makeRow(it) {
+  const li = document.createElement("li"); li.className = "row";
+  li.innerHTML = '<span class="name"></span><span class="meta"></span>' +
+    '<button class="x" type="button" aria-label="Elimină fișierul">×</button><div class="bar"><i></i></div>';
+  li.querySelector(".name").textContent = it.file.name;
+  li.querySelector(".x").onclick = () => {
+    if (it.state === "uploading") return;
+    items = items.filter(i => i !== it); li.remove(); sync();
+  };
+  return li;
+}
+
+function setRow(it) {
+  const r = it.row, m = r.querySelector(".meta");
+  r.className = "row" + (it.state === "uploading" ? " up" : it.state === "done" ? " done up" : "");
+  m.className = "meta" + (it.state === "error" ? " err" : it.state === "done" ? " ok" : "");
+  m.textContent = it.state === "done" ? fmt(it.file.size) + " – încărcat"
+    : it.state === "uploading" ? fmt(it.file.size) + " – " + it.pct + "%"
+    : it.state === "error" ? it.err : fmt(it.file.size);
+  r.querySelector(".bar i").style.width = it.pct + "%";
+  r.querySelector(".x").disabled = it.state === "uploading";
+}
+
+function sync() {
+  const todo = items.filter(i => i.state !== "done").length;
+  const failed = items.filter(i => i.state === "error").length;
+  el.go.disabled = busy || !todo;
+  el.go.textContent = busy ? "Se încarcă…" : failed ? "Reîncearcă (" + failed + ")" : "Încarcă fișierele";
+  el.keep.hidden = !busy;
+}
+
+/* ---------- upload reluabil direct către Google Drive ---------- */
+function send(url, headers, body, onProg) {
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest();
+    x.open("PUT", url);
+    for (const k in headers) x.setRequestHeader(k, headers[k]);
+    x.timeout = 10 * 60 * 1000;
+    if (onProg) x.upload.onprogress = e => onProg(e.loaded);
+    x.onload = () => res({status: x.status, range: x.getResponseHeader("Range")});
+    x.onerror = () => rej(new Error("Conexiune întreruptă"));
+    x.ontimeout = () => rej(new Error("Timp depășit"));
+    x.send(body);
+  });
+}
+const parseRange = (h, fallback) => { const m = /bytes=0-(\d+)/.exec(h || ""); return m ? Number(m[1]) + 1 : fallback; };
+
+async function probe(url, total) {            // câți octeți a primit deja Drive
+  try {
+    const r = await send(url, {"Content-Range": "bytes */" + total}, null);
+    if (r.status === 200 || r.status === 201) return "done";
+    if (r.status === 308) return parseRange(r.range, 0);
+  } catch {}
+  return null;
+}
+
+async function uploadFile(it) {
+  const f = it.file, total = f.size, key = "up:" + EVENT + ":" + f.name + ":" + total + ":" + f.lastModified;
+  let url = store.get(key), offset = 0, fails = 0;
+
+  if (url) {                                   // reluare după întrerupere sau reîncărcarea paginii
+    const o = await probe(url, total);
+    if (o === "done") { store.del(key); return; }
+    if (o === null) { store.del(key); url = null; } else offset = o;
+  }
+  if (!url) { url = (await api("init", {name: f.name, size: total, type: f.type})).uploadUrl; store.set(key, url); }
+
+  while (offset < total) {
+    const end = Math.min(offset + CHUNK, total), start = offset;
+    try {
+      const r = await send(url, {"Content-Range": "bytes " + start + "-" + (end - 1) + "/" + total},
+        f.slice(start, end), l => { it.pct = Math.floor((start + l) / total * 100); setRow(it); });
+      if (r.status === 200 || r.status === 201) offset = total;
+      else if (r.status === 308) { offset = parseRange(r.range, end); fails = 0; }
+      else if (r.status === 404 || r.status === 410) {
+        store.del(key); throw Object.assign(new Error("Sesiunea a expirat. Apasă Reîncearcă."), {fatal: true});
+      } else throw new Error("Eroare " + r.status);
+    } catch (e) {
+      if (e.fatal) throw e;
+      if (++fails > 6) throw new Error("Conexiune instabilă. Apasă Reîncearcă pentru a continua.");
+      await sleep(Math.min(30000, 1500 * 2 ** fails));
+      const o = await probe(url, total);
+      if (o === "done") offset = total; else if (typeof o === "number") offset = o;
+    }
+  }
+  store.del(key);
+}
+
+async function startUpload() {
+  if (busy) return;
+  busy = true; el.notice.hidden = true; sync();
+  try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
+  for (const it of items) {
+    if (it.state === "done") continue;
+    it.state = "uploading"; it.pct = 0; setRow(it);
+    try { await uploadFile(it); it.state = "done"; it.pct = 100; }
+    catch (e) { it.state = "error"; it.err = e.message || "Încărcare eșuată."; }
+    setRow(it);
+  }
+  try { await wakeLock?.release(); } catch {}
+  busy = false; sync();
+  if (items.length && items.every(i => i.state === "done")) showThanks();
+}
+
+function showThanks() {
+  const n = items.length;
+  $("#thanksText").textContent = n === 1 ? "Fișierul a fost încărcat." : "Cele " + n + " fișiere au fost încărcate.";
+  el.thanks.hidden = false; el.go.hidden = true; el.zone.hidden = true;
+  el.thanks.scrollIntoView({behavior: "smooth", block: "center"});
+}
+
+/* ---------- evenimente ---------- */
+el.pick.onclick = () => el.file.click();
+el.file.onchange = () => { addFiles(el.file.files); el.file.value = ""; };
+el.go.onclick = startUpload;
+$("#more").onclick = () => {
+  items = []; el.list.replaceChildren(); el.thanks.hidden = true; el.go.hidden = false; el.zone.hidden = false; sync();
+};
+["dragenter", "dragover"].forEach(t => el.zone.addEventListener(t, e => { e.preventDefault(); el.zone.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => el.zone.addEventListener(t, e => { e.preventDefault(); el.zone.classList.remove("over"); }));
+el.zone.addEventListener("drop", e => { if (cfg && !busy) addFiles(e.dataTransfer.files); });
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
+window.addEventListener("beforeunload", e => { if (busy) { e.preventDefault(); e.returnValue = ""; } });
+
+boot();
+</script>
+</body>
+</html>
